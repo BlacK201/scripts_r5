@@ -26,6 +26,26 @@ void function Cl_RegisterLocation(LocationSettings locationSettings)
     file.locationSettings.append(locationSettings)
 }
 
+void function MakeWelcomeRUI()
+{
+    UISize screenSize = GetScreenSize()
+    var screenAlignmentTopo = RuiTopology_CreatePlane( <( screenSize.width * 0.22),( screenSize.height * 0.34 ), 0>, <float( screenSize.width ), 0, 0>, <0, float( screenSize.height ), 0>, false )
+    var rui = RuiCreate( $"ui/announcement_quick_right.rpak", screenAlignmentTopo, RUI_DRAW_HUD, RUI_SORT_SCREENFADE + 1 )
+    
+    RuiSetGameTime( rui, "startTime", Time() )
+    RuiSetString( rui, "messageText", "Welcome To BlacK201's Server! GL&HF" )
+    RuiSetString( rui, "messageSubText", "Text 3")
+    RuiSetFloat( rui, "duration", 9999999 )
+    RuiSetFloat3( rui, "eventColor", SrgbToLinear( <128, 188, 255> ) )
+    
+    OnThreadEnd(
+		function() : ( rui )
+		{
+			RuiDestroy( rui )
+		}
+	)
+    WaitForever()
+}
 
 void function MakeScoreRUI()
 {
@@ -69,6 +89,7 @@ void function ServerCallback_TDM_DoAnnouncement(float duration, int type)
         case eTDMAnnounce.ROUND_START:
         {
             thread MakeScoreRUI();
+            thread MakeWelcomeRUI()
             message = "Round start"
             break
         }
