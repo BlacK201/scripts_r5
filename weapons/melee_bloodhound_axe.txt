@@ -18,8 +18,8 @@ WeaponData
 	"viewmodel"   								"mdl/weapons/bloodhound_axe/ptpov_bloodhound_axe.rmdl"
 	"playermodel" 								"mdl/weapons/bloodhound_axe/w_bloodhound_axe.rmdl"
 
-	//"OnWeaponActivate"							"OnWeaponActivate_melee_bloodhound_axe"
-    //"OnWeaponDeactivate"						"OnWeaponDeactivate_melee_bloodhound_axe"
+	"OnWeaponActivate"							"OnWeaponActivate_melee_bloodhound_axe"
+    "OnWeaponDeactivate"						"OnWeaponDeactivate_melee_bloodhound_axe"
 
     // FX
 	"impact_effect_table"							"melee_human"
