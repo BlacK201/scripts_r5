@@ -681,7 +681,8 @@ bool function GRX_IsInventoryReady( entity player = null )
 	#elseif UI
 		player = GetUIPlayer()
 	#endif
-	return false
+	return true
+	return GetPlayerGRXScriptState( player ).isInventoryReady
 }
 #endif
 
