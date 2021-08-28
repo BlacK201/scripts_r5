@@ -53,6 +53,7 @@ global function GetDefaultItemFlavorForLoadoutSlot
 global function ConvertItemFlavorToLoadoutSlotContentsIndex
 global function ConvertLoadoutSlotContentsIndexToItemFlavor
 global function IsValidLoadoutSlotContentsIndex
+global function TDM_Change_Character
 
 global function GetAllLoadoutSlots
 global function IsLoadoutSlotActive
@@ -856,6 +857,7 @@ void function DEV_RequestSetItemFlavorLoadoutSlot( EHI playerEHI, LoadoutEntry e
 
 	string commandString = "loadouts_devset " + entry.id + " " + ItemFlavor_GetHumanReadableRef( itemFlavor )
 
+	printt(commandString)
 	#if CLIENT
 		GetLocalClientPlayer().ClientCommand( commandString )
 	#elseif UI
@@ -1340,9 +1342,9 @@ void function SetItemFlavorLoadoutSlotContentsInternal( EHI playerEHI, LoadoutEn
 		player.SetPersistentVar( "character_loadouts[" + entry.guid + "]." + entry.id, itemFlavorPDefInt )
 	}
 
-	//printf( "sh_loadouts.gnut debug (R5DEV-29743), SetItemFlavorLoadoutSlotContentsInternal, [%d], SetPersistentVar( \"%s\", \"%s\"{%d} )",
-	//	player.GetEncodedEHandle(), "loadouts." + entry.id, itemFlavorPDefStringRef, ItemFlavor_GetNetworkIndex( itemFlavor )
-	//)
+	printf( "sh_loadouts.gnut debug (R5DEV-29743), SetItemFlavorLoadoutSlotContentsInternal, [%d], SetPersistentVar( \"%s\")",
+		player.GetEncodedEHandle(), "loadouts." + entry.id
+	)
 
 	RefreshLoadoutSlotInternal( playerEHI, entry, null )
 }
@@ -1941,7 +1943,7 @@ bool function ClientCommand_loadouts_set( entity player, array<string> args )
 
 	if ( IsLoadoutSlotLocked( playerEHI, entry ) )
 	{
-		Assert( false, "Attempted to use 'loadouts_set' on locked loadout slot (\"" + entry.id + "\")." )
+		Assert( false, "Attempted to use 'loadouts_set' on locked loadout slot \"" + entry.id + "\")." )
 		return true
 	}
 
@@ -1965,6 +1967,100 @@ bool function ClientCommand_loadouts_set( entity player, array<string> args )
 	return true
 }
 #endif
+
+bool function TDM_Change_Character( entity commandPlayer, array<string> args ) 
+{
+	// loadouts_devset
+	// 1: [loadout slot entry id string]
+	// 2: [slot contents item flavor ref string]
+	//
+	// example: loadouts_devset character_selection character_gibraltar
+
+	const int EXPECTED_ARG_COUNT_MIN = 2
+	const int EXPECTED_ARG_COUNT_MAX = 3
+	if ( args.len() < EXPECTED_ARG_COUNT_MIN || args.len() > EXPECTED_ARG_COUNT_MAX )
+	{
+		Warning( "Incorrect number of arguments to client command 'loadouts_devset' (got \"" + DEV_ArrayConcat( args, " " ) + "\", expected " + EXPECTED_ARG_COUNT_MIN + "-" + EXPECTED_ARG_COUNT_MAX + " arguments)." )
+		return true
+	}
+    #if SERVER && R5DEV
+		array<entity> playersToAffect = ((args.len() < 3 || args[2] != "all") ? [commandPlayer] : GetPlayerArray())
+		foreach ( entity player in playersToAffect )
+		{
+			EHI playerEHI = ToEHI( player )
+
+			string entryId = args[0]
+				array<LoadoutEntry> relevantEntries
+				foreach( LoadoutEntry possibleEntry in fileLevel.loadoutSlotEntries )
+				{
+					if (possibleEntry.id == entryId) {
+						relevantEntries.append( possibleEntry )
+					}
+				}
+			
+
+			string slotContentsString = args[1]
+
+			array<ItemFlavor> flavorListForTestingNewness = []
+				foreach ( LoadoutEntry entry in relevantEntries )
+				{
+					int slotContentsIndex
+					ItemFlavor itemFlavor
+					if ( slotContentsString == "~default~" )
+					{
+						itemFlavor = GetDefaultItemFlavorForLoadoutSlot( playerEHI, entry )
+					}
+					else if ( slotContentsString == "~random~" )
+					{
+						itemFlavor = GetRandomGoodItemFlavorForLoadoutSlot( playerEHI, entry, true )
+					}
+					else if ( slotContentsString == "~next~" || slotContentsString == "~prev~" )
+					{
+						int dir = (slotContentsString == "~next~" ? 1 : -1)
+
+						array<ItemFlavor> possibleChoices = entry.validItemFlavorList
+						ItemFlavor currentChoice          = LoadoutSlot_GetItemFlavor( playerEHI, entry )
+						itemFlavor = possibleChoices[real_int_modulo( possibleChoices.find( currentChoice ) + dir, possibleChoices.len() )]
+					}
+					else if ( IsValidItemFlavorHumanReadableRef( slotContentsString ) )
+					{
+						itemFlavor = GetItemFlavorByHumanReadableRef( slotContentsString )
+					}
+					else
+					{
+						Warning( "Tried to use 'loadouts_devset' with unknown item flavor ref string \"" + slotContentsString + "\"." )
+						// continue
+					}
+
+					if ( !(itemFlavor in entry._____INTERNAL_itemFlavorNetworkIndexMap) )
+						slotContentsIndex = SLOT_CONTENTS_SENTINEL_INVALID
+					else
+						slotContentsIndex = ConvertItemFlavorToLoadoutSlotContentsIndex( entry, itemFlavor )
+
+					if ( !IsContentsIndexValidForLoadoutSlot( playerEHI, entry, slotContentsIndex, eValidation.DONT_ASSERT ) )
+					{
+						// print(slotContentsString.find("melee_skin_"));
+						// printt(slotContentsString.find("melee_skin_"));
+						// if(slotContentsString.find("melee_skin_") != 0) {
+							Warning( "Tried to use 'loadouts_devset' with item flavor \"" + slotContentsString + "\" which is not valid for loadout slot \"" + entryId + "\"." )
+							// continue
+						// }
+					}
+
+					flavorListForTestingNewness.append( itemFlavor )
+
+					// IsItemFlavorUnlockedForLoadoutSlot( playerEHI, entry, itemFlavor ) )
+
+					SetItemFlavorLoadoutSlotContentsInternal( playerEHI, entry, itemFlavor )
+
+					printt( player, "loadouts_devset", entry.id, ItemFlavor_GetHumanReadableRef( itemFlavor ) )
+				}
+			//Newness_MarkItemFlavorsAsNewForPlayer( player, flavorListForTestingNewness, true )
+		}
+    #endif
+	return true
+}
+
 
 #if SERVER && R5DEV
 bool function ClientCommand_loadouts_devset( entity commandPlayer, array<string> args )
@@ -2017,12 +2113,6 @@ bool function ClientCommand_loadouts_devset( entity commandPlayer, array<string>
 
 		foreach ( LoadoutEntry entry in relevantEntries )
 		{
-			if ( IsLoadoutSlotLocked( playerEHI, entry ) )
-			{
-				Warning( "Tried to use 'loadouts_devset' on locked loadout slot (\"" + entryId + "\")." )
-				continue
-			}
-
 			int slotContentsIndex
 			ItemFlavor itemFlavor
 			if ( slotContentsString == "~default~" )

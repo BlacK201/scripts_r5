@@ -277,6 +277,9 @@ bool function ClientCommand_GiveWeapon(entity player, array<string> args)
 void function SV_OnPlayerConnected(entity player)
 {
     wait 1.5
+    // Edit default character here
+    TDM_Change_Character(player, ["character_selection", "character_octane"])
+
     //Give passive regen (pilot blood)
     GivePassive(player, ePassives.PAS_PILOT_BLOOD)
 
