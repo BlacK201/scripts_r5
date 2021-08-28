@@ -1943,7 +1943,7 @@ bool function ClientCommand_loadouts_set( entity player, array<string> args )
 
 	if ( IsLoadoutSlotLocked( playerEHI, entry ) )
 	{
-		Assert( false, "Attempted to use 'loadouts_set' on locked loadout slot \"" + entry.id + "\")." )
+		Assert( false, "Attempted to use 'loadouts_set' on locked loadout slot (\"" + entry.id + "\")." )
 		return true
 	}
 
