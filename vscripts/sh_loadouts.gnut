@@ -856,6 +856,7 @@ void function DEV_RequestSetItemFlavorLoadoutSlot( EHI playerEHI, LoadoutEntry e
 
 	string commandString = "loadouts_devset " + entry.id + " " + ItemFlavor_GetHumanReadableRef( itemFlavor )
 
+	printt(commandString)
 	#if CLIENT
 		GetLocalClientPlayer().ClientCommand( commandString )
 	#elseif UI
@@ -1340,9 +1341,9 @@ void function SetItemFlavorLoadoutSlotContentsInternal( EHI playerEHI, LoadoutEn
 		player.SetPersistentVar( "character_loadouts[" + entry.guid + "]." + entry.id, itemFlavorPDefInt )
 	}
 
-	//printf( "sh_loadouts.gnut debug (R5DEV-29743), SetItemFlavorLoadoutSlotContentsInternal, [%d], SetPersistentVar( \"%s\", \"%s\"{%d} )",
-	//	player.GetEncodedEHandle(), "loadouts." + entry.id, itemFlavorPDefStringRef, ItemFlavor_GetNetworkIndex( itemFlavor )
-	//)
+	printf( "sh_loadouts.gnut debug (R5DEV-29743), SetItemFlavorLoadoutSlotContentsInternal, [%d], SetPersistentVar( \"%s\")",
+		player.GetEncodedEHandle(), "loadouts." + entry.id
+	)
 
 	RefreshLoadoutSlotInternal( playerEHI, entry, null )
 }
@@ -2054,8 +2055,12 @@ bool function ClientCommand_loadouts_devset( entity commandPlayer, array<string>
 
 			if ( !IsContentsIndexValidForLoadoutSlot( playerEHI, entry, slotContentsIndex, eValidation.DONT_ASSERT ) )
 			{
-				Warning( "Tried to use 'loadouts_devset' with item flavor \"" + slotContentsString + "\" which is not valid for loadout slot \"" + entryId + "\"." )
-				continue
+				// print(slotContentsString.find("melee_skin_"));
+				// printt(slotContentsString.find("melee_skin_"));
+				// if(slotContentsString.find("melee_skin_") != 0) {
+					Warning( "Tried to use 'loadouts_devset' with item flavor \"" + slotContentsString + "\" which is not valid for loadout slot \"" + entryId + "\"." )
+					// continue
+				// }
 			}
 
 			flavorListForTestingNewness.append( itemFlavor )
