@@ -12,7 +12,7 @@ global function NewWeaponKit
 
 global const NO_CHOICES = 2
 global const LOCATION_CUTSCENE_DURATION = 9
-global const SCORE_GOAL_TO_WIN = 100
+global const SCORE_GOAL_TO_WIN = 3
 
 global enum eTDMAnnounce
 {
@@ -56,7 +56,7 @@ struct {
 void function Sh_CustomTDM_Init() 
 {
 
-
+Remote_RegisterClientFunction("ServerCallback_TDM_DoVictoryAnnounce", "int", 0, 255)
     // Map locations
 
     switch(GetMapName())

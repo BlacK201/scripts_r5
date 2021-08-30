@@ -4,6 +4,7 @@ global function ServerCallback_TDM_DoAnnouncement
 global function ServerCallback_TDM_SetSelectedLocation
 global function ServerCallback_TDM_DoLocationIntroCutscene
 global function ServerCallback_TDM_PlayerKilled
+global function ServerCallback_TDM_DoVictoryAnnounce
 
 global function Cl_RegisterLocation
 
@@ -13,12 +14,14 @@ struct {
     array choices
     array<LocationSettings> locationSettings
     var scoreRui
+    var victoryRui
 } file;
 
-
+global int maxTeam = 0;
 
 void function Cl_CustomTDM_Init()
 {
+    printf("cl_customTDM_init")
 }
 
 void function Cl_RegisterLocation(LocationSettings locationSettings)
@@ -37,11 +40,18 @@ void function MakeScoreRUI()
     clGlobal.levelEnt.EndSignal( "CloseScoreRUI" )
 
     UISize screenSize = GetScreenSize()
-    var screenAlignmentTopo = RuiTopology_CreatePlane( <( screenSize.width * 0.25),( screenSize.height * 0.31 ), 0>, <float( screenSize.width ), 0, 0>, <0, float( screenSize.height ), 0>, false )
+    var screenAlignmentTopo = RuiTopology_CreatePlane( <( screenSize.width * 0.25),( screenSize.height * 0.0 ), 0>, <float( screenSize.width ), 0, 0>, <0, float( screenSize.height ), 0>, false )
     var rui = RuiCreate( $"ui/announcement_quick_right.rpak", screenAlignmentTopo, RUI_DRAW_HUD, RUI_SORT_SCREENFADE + 1 )
     
     RuiSetGameTime( rui, "startTime", Time() )
-    RuiSetString( rui, "messageText", "Team IMC: 0  ||  Team MIL: 0" )
+
+    string msg = ""
+    foreach(player in GetPlayerArray())
+    {
+        msg = msg + player.GetPlayerName() + ": " + "0" + "\n"
+    }
+    //RuiSetString( rui, "messageText", "Team IMC: 0  ||  Team MIL: 0" )
+    RuiSetString( rui, "messageText", msg )
     RuiSetString( rui, "messageSubText", "Text 2")
     RuiSetFloat( rui, "duration", 9999999 )
     RuiSetFloat3( rui, "eventColor", SrgbToLinear( <128, 188, 255> ) )
@@ -61,6 +71,7 @@ void function MakeScoreRUI()
 
 void function ServerCallback_TDM_DoAnnouncement(float duration, int type)
 {
+    
     string message = ""
     string subtext = ""
     switch(type)
@@ -86,15 +97,51 @@ void function ServerCallback_TDM_DoAnnouncement(float duration, int type)
                 message = file.selectedLocation.name
             break
         }
+
     }
 	AnnouncementData announcement = Announcement_Create( message )
     Announcement_SetSubText(announcement, subtext)
+    //Announcement_SetStyle( announcement, ANNOUNCEMENT_STYLE_RESULTS )
 	Announcement_SetStyle( announcement, ANNOUNCEMENT_STYLE_CIRCLE_WARNING )
 	Announcement_SetPurge( announcement, true )
 	Announcement_SetOptionalTextArgsArray( announcement, [ "true" ] )
 	Announcement_SetPriority( announcement, 200 ) //Be higher priority than Titanfall ready indicator etc
 	announcement.duration = duration
 	AnnouncementFromClass( GetLocalViewPlayer(), announcement )
+}
+
+
+void function ServerCallback_TDM_DoVictoryAnnounce( int winnerTeam )
+{
+	if ( file.victoryRui != null )
+		return
+
+    string message = ""
+
+	asset ruiAsset = GetChampionScreenRuiAsset()
+	file.victoryRui = CreateFullscreenRui( ruiAsset )
+	RuiSetBool( file.victoryRui, "onWinningTeam",  GetLocalClientPlayer().GetTeam() == winnerTeam)
+    //RuiSetString(file.victoryRui, "messageText", message);
+    //RuiSetFloat( file.victoryRui, "duration", duration )
+    //RuiSetFloat3( file.victoryRui, "eventColor", SrgbToLinear( <128, 188, 255> ) )
+
+
+	EmitSoundOnEntity( GetLocalClientPlayer(), "UI_InGame_ChampionVictory" )
+
+    thread DestroyVictoryRui()
+
+}
+
+void function DestroyVictoryRui()
+{
+    wait 5
+    RuiDestroy( file.victoryRui )
+    file.victoryRui = null
+}
+
+asset function GetChampionScreenRuiAsset()
+{
+	return $"ui/champion_screen.rpak"
 }
 
 void function ServerCallback_TDM_DoLocationIntroCutscene()
@@ -161,7 +208,16 @@ void function ServerCallback_TDM_SetSelectedLocation(int sel)
 void function ServerCallback_TDM_PlayerKilled()
 {
     if(file.scoreRui)
-        RuiSetString( file.scoreRui, "messageText", "Team IMC: " + GameRules_GetTeamScore(TEAM_IMC) + "  ||  Team MIL: " + GameRules_GetTeamScore(TEAM_MILITIA) );
+    {
+        string msg = ""
+        foreach(player in GetPlayerArray())
+        {
+            msg = msg + player.GetPlayerName() + ": " + GameRules_GetTeamScore(player.GetTeam()) + "\n"
+        }
+
+        RuiSetString( file.scoreRui, "messageText", msg);
+    }
+        
 }
 
 var function CreateTemporarySpawnRUI(entity parentEnt, float duration)

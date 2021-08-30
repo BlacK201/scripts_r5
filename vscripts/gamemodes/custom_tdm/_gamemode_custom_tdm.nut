@@ -1,6 +1,9 @@
 global function _CustomTDM_Init
 global function _RegisterLocation
 
+int teamCount
+array<int> teamArr
+table playersInfo
 
 enum eTDMState
 {
@@ -19,7 +22,8 @@ struct {
     array<string> whitelistedWeapons
 
     entity bubbleBoundary
-} file;
+} file
+
 
 
 void function _CustomTDM_Init()
@@ -91,20 +95,51 @@ void function DestroyPlayerProps()
     file.playerSpawnedProps.clear()
 }
 
+bool function HasNum(array<int> arr, int num)
+{
+    foreach(t in arr)
+    {
+        if(t == num)
+        {
+            return true
+        }
+    }
 
+    return false
+}
 
 void function VotingPhase()
 {
     DestroyPlayerProps();
     SetGameState(eGameState.MapVoting)
     
+
     //Reset scores
-    GameRules_SetTeamScore(TEAM_IMC, 0)
-    GameRules_SetTeamScore(TEAM_MILITIA, 0)
+    foreach(player in GetPlayerArray())
+    {
+        if(!HasNum(teamArr, player.GetTeam()))
+        {
+            teamArr.append(player.GetTeam())
+            teamCount = teamArr.len()
+            GameRules_SetTeamScore(player.GetTeam(), 0)
+        }
+    }
+
+    
+    if(teamArr.len() == 0)
+    {
+        printt("No team in TeamArr")
+    }
+
+
+
+    //GameRules_SetTeamScore(TEAM_IMC, 0)
+    //GameRules_SetTeamScore(TEAM_MILITIA, 0)
     
     foreach(player in GetPlayerArray()) 
     {
-        if(!IsValid(player)) continue;
+        if(!IsValid(player)) 
+            continue
         DecideRespawnPlayer(player)
         MakeInvincible(player)
 		HolsterAndDisableWeapons( player )
@@ -128,6 +163,7 @@ void function VotingPhase()
 void function StartRound() 
 {
     SetGameState(eGameState.Playing)
+    printt("max teams : " + GetCurrentPlaylistVarInt("max_teams",20))
     
     foreach(player in GetPlayerArray())
     {
@@ -141,6 +177,7 @@ void function StartRound()
     wait 1
     foreach(player in GetPlayerArray())
     {
+        if(!IsValid(player)) continue;
         DecideRespawnPlayer(player)
         TpPlayerToSpawnPoint(player)
         
@@ -176,13 +213,104 @@ void function StartRound()
         }
         
     }
-    float endTime = Time() + GetCurrentPlaylistVarFloat("round_time", 480)
+    float endTime = Time() + GetCurrentPlaylistVarFloat("round_time", 150)
     while( Time() <= endTime )
 	{
         if(file.tdmState == eTDMState.WINNER_DECIDED)
             break
 		WaitFrame()
 	}
+
+    array<int> scoreArr;
+    foreach(t in teamArr)
+    {
+        scoreArr.append(GameRules_GetTeamScore(t));
+    }
+
+    scoreArr.sort();
+    scoreArr.reverse();
+
+    int winnerScore = 0;
+
+    if(scoreArr.len() != 0)
+    {
+        winnerScore = scoreArr[0]
+    }
+    else
+    {
+        printt("scoreArr no content so no one victory")
+    }
+
+    int winnerTeam = 97
+
+    if(winnerScore != 0)
+    {
+        foreach(player in GetPlayerArray())
+        {
+            if(GameRules_GetTeamScore(player.GetTeam()) == winnerScore)
+            {
+                winnerTeam = player.GetTeam();
+                break;
+            }
+            
+        }
+
+        foreach( entity player in GetPlayerArray() )
+        {
+            thread EmitSoundOnEntityOnlyToPlayer( player, player, "diag_ap_aiNotify_winnerFound" )
+        }
+
+
+    }
+
+    
+
+    /*
+    if(teamIMCScore > teamMILITIAScore)
+    {
+        winnerTeam = TEAM_IMC
+    }
+    else if(teamIMCScore == teamMILITIAScore)
+    {
+        winnerTeam = 97
+    }
+    else
+    {
+        winnerTeam = TEAM_MILITIA
+    }
+    */
+
+
+
+
+    printt("winner team : " + winnerTeam);
+
+    foreach(player in GetPlayerArray())
+    {
+        if(!IsValid(player)) continue;
+        DecideRespawnPlayer(player)
+        MakeInvincible(player)
+		HolsterAndDisableWeapons( player )
+        player.ForceStand()
+        player.FreezeControlsOnServer();
+        Remote_CallFunction_NonReplay(player, "ServerCallback_TDM_DoVictoryAnnounce", winnerTeam)
+        
+    }
+    
+    wait 5
+    
+    foreach(player in GetPlayerArray())
+    {
+        if(!IsValid(player)) continue;
+        ClearInvincible(player)
+        DeployAndEnableWeapons(player)
+        player.UnforceStand()
+        player.UnfreezeControlsOnServer();
+    }
+
+
+    teamArr.clear()
+
     file.tdmState = eTDMState.IN_PROGRESS
 
     file.bubbleBoundary.Destroy()
@@ -247,6 +375,8 @@ bool function ClientCommand_GiveWeapon(entity player, array<string> args)
             case "tactical":
                 if( IsValid( tactical ) ) player.TakeOffhandWeapon( OFFHAND_TACTICAL )
                 weapon = player.GiveOffhandWeapon(args[1], OFFHAND_TACTICAL)
+                entity newTactical = player.GetOffhandWeapon( OFFHAND_TACTICAL )
+                newTactical.SetWeaponPrimaryClipCount( 0 )
                 break
             case "u":
             case "ultimate":
@@ -276,6 +406,7 @@ bool function ClientCommand_GiveWeapon(entity player, array<string> args)
 
 void function SV_OnPlayerConnected(entity player)
 {
+    printt("playerConnected")
     wait 1.5
     //Give passive regen (pilot blood)
     GivePassive(player, ePassives.PAS_PILOT_BLOOD)
@@ -283,9 +414,44 @@ void function SV_OnPlayerConnected(entity player)
     DecideRespawnPlayer(player)
     if( IsAlive( player ) )
         PlayerRestoreHP(player, 100, GetCurrentPlaylistVarFloat("default_shield_hp", 100))
+
+    if(!IsValid( player ))
+    {
+        printt("player is not exist, dont need do anything!")
+        return
+    }
+       
+
     TpPlayerToSpawnPoint(player)
     //SetPlayerSettings(player, TDM_PLAYER_SETTINGS)
 
+    //GetTeamNum
+    if(!HasNum(teamArr, player.GetTeam()))
+    {
+        teamArr.append(player.GetTeam())
+        teamCount = teamArr.len()
+        GameRules_SetTeamScore(player.GetTeam(), 0)
+    }
+
+    foreach(idx,val in teamArr)
+    {
+        print("index: " + idx + " value: " + val + "\n")
+    }
+
+    
+    teamCount = teamArr.len();
+    printt("teamCount:" + teamCount)
+
+    
+    printt("playerName:" + player.GetPlayerName())
+
+    //TableDump(playersInfo,2)
+
+    //var temp = playersInfo.rawget(player.GetTeam().tostring())
+    //table t = expect table(temp) 
+    //printt("name : " + t.name)
+
+    //printt("name : " + playersInfo.(player.GetTeam().tostring()).name);
 
     switch(GetGameState())
     {
@@ -296,7 +462,6 @@ void function SV_OnPlayerConnected(entity player)
     case eGameState.Playing:
         player.UnfreezeControlsOnServer();
         Remote_CallFunction_NonReplay(player, "ServerCallback_TDM_DoAnnouncement", 5, eTDMAnnounce.ROUND_START)
-
         break
     default: 
         break
@@ -323,25 +488,17 @@ void function SV_OnPlayerDied(entity victim, entity attacker, var damageInfo)
         if(IsValid(weapon1)) mainWeaponsKit.append(NewWeaponKit(weapon1.GetWeaponClassName(), weapon1.GetMods()))
         if(IsValid(weapon2)) mainWeaponsKit.append(NewWeaponKit(weapon2.GetWeaponClassName(), weapon2.GetMods()))
 
-        wait GetCurrentPlaylistVarFloat("respawn_delay", 8)
-
-        if(IsValid(victim) && !IsAlive(victim))
-        {
-
-            DecideRespawnPlayer( victim )
-            
-            PlayerRestoreWeapons(victim, mainWeaponsKit)
-            SetPlayerSettings(victim, TDM_PLAYER_SETTINGS)
-            PlayerRestoreHP(victim, 100, GetCurrentPlaylistVarFloat("default_shield_hp", 100))
-            
-            TpPlayerToSpawnPoint(victim)
-            thread GrantSpawnImmunity(victim, 3)
-        }
+        
 
         if(IsValid(attacker) && attacker.IsPlayer() && IsAlive(attacker) && attacker != victim)
         {
             int score = GameRules_GetTeamScore(attacker.GetTeam());
             score++;
+
+            //need update table
+            //var temp = playersInfo.rawget(attacker.GetTeamNum)
+            //expect table(temp).score = score;
+
             GameRules_SetTeamScore(attacker.GetTeam(), score);
             if(score >= SCORE_GOAL_TO_WIN)
             {
@@ -353,12 +510,38 @@ void function SV_OnPlayerDied(entity victim, entity attacker, var damageInfo)
             }
             PlayerRestoreHP(attacker, 100, GetCurrentPlaylistVarFloat("default_shield_hp", 100))
         }
-        
+
         //Tell each player to update their Score RUI
-        foreach(player in GetPlayerArray())
+      /*  foreach(player in GetPlayerArray())
         {
             Remote_CallFunction_NonReplay(player, "ServerCallback_TDM_PlayerKilled")
         }
+       */
+        Remote_CallFunction_NonReplay(attacker, "ServerCallback_TDM_PlayerKilled")
+        wait GetCurrentPlaylistVarFloat("respawn_delay", 8)
+
+ if(IsValid(victim) && !IsAlive(victim))
+        {
+
+            DecideRespawnPlayer( victim )
+
+            PlayerRestoreWeapons(victim, mainWeaponsKit)
+            SetPlayerSettings(victim, TDM_PLAYER_SETTINGS)
+            PlayerRestoreHP(victim, 100, GetCurrentPlaylistVarFloat("default_shield_hp", 100))
+            ClientCommand_GiveWeapon(victim, ["t", "mp_ability_3dash"])
+            entity defaulttactical = victim.GetOffhandWeapon( OFFHAND_TACTICAL )
+            defaulttactical.SetWeaponPrimaryClipCount( defaulttactical.GetWeaponPrimaryClipCountMax() )
+            TpPlayerToSpawnPoint(victim)
+            thread GrantSpawnImmunity(victim, 3)
+        }
+     foreach(player in GetPlayerArray())
+        {
+            Remote_CallFunction_NonReplay(player, "ServerCallback_TDM_PlayerKilled")
+        }
+
+
+
+       
         break
     default:
 
@@ -459,7 +642,19 @@ void function GrantSpawnImmunity(entity player, float duration)
 
 LocPair function SV_GetAppropriateSpawnLocation(entity player)
 {
-    int ourTeam = player.GetTeam()
+    bool needSelectRespawn = true
+    if(!IsValid(player))
+    {
+        needSelectRespawn = false
+    }
+
+    int ourTeam = 0;
+
+    if(needSelectRespawn)
+    {
+        ourTeam = player.GetTeam()
+    }
+    
 
     LocPair selectedSpawn
 
@@ -472,13 +667,20 @@ LocPair function SV_GetAppropriateSpawnLocation(entity player)
         float maxDistToEnemy = 0
         foreach(spawn in file.selectedLocation.spawns)
         {
-            vector enemyOrigin = GetClosestEnemyToOrigin(spawn.origin, ourTeam)
-            float distToEnemy = Distance(spawn.origin, enemyOrigin)
-
-            if(distToEnemy > maxDistToEnemy)
+            if (needSelectRespawn)
             {
-                maxDistToEnemy = distToEnemy
-                selectedSpawn = spawn
+                 vector enemyOrigin = GetClosestEnemyToOrigin(spawn.origin, ourTeam)
+                float distToEnemy = Distance(spawn.origin, enemyOrigin)
+
+                if(distToEnemy > maxDistToEnemy)
+                {
+                    maxDistToEnemy = distToEnemy
+                    selectedSpawn = spawn
+                }
+            }
+           else
+            {
+               selectedSpawn = spawn
             }
         }
         break
