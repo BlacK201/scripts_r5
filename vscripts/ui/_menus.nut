@@ -376,6 +376,7 @@ void function UICodeCallback_ToggleInventoryMenu()
 		return
 
 	if ( !activeMenu )
+		//test
 		RunClientScript( "PROTO_OpenInventoryOrSpecifiedMenu", GetUIPlayer() )
 	else
 		CloseAllMenus()
@@ -1658,6 +1659,8 @@ void function InitMenus()
 
 	AddMenu( "DevMenu", $"resource/ui/menus/dev.menu", InitDevMenu, "Dev" )
 
+	// AddMenu( "MainMenuCustomButtonMenu", $"resource/ui/menus/dev.menu", InitMainMenuCustom, "MainMenuCustomButton" )
+
 	InitTabs()
 	InitSurveys()
 	ShMenuModels_UIInit()
@@ -1715,6 +1718,12 @@ void function InitDummyMenu( var newMenuArg )
 {
 
 }
+
+// void function InitMainMenuCustom( var newMenuArg )
+// {
+// 	var menu = GetMenu( "MainMenuCustomButtonMenu" )
+
+// }
 
 
 void functionref( var ) function AdvanceMenuEventHandler( var menu )

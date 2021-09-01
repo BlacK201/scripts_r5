@@ -10,9 +10,29 @@ global function NewLocationSettings
 global function NewLocPair
 global function NewWeaponKit
 
+global function Spectator_GetReplayIsEnabled
+global function Spectator_GetReplayDelay
+global function Deathmatch_GetRespawnDelay
+global function Equipment_GetDefaultShieldHP
+global function Deathmatch_GetOOBDamagePercent
+global function Deathmatch_GetVotingTime
+global function CMD_GetTGiveEnabled
+
+global function Deathmatch_GetIntroCutsceneNumSpawns           
+global function Deathmatch_GetIntroCutsceneSpawnDuration        
+global function Deathmatch_GetIntroSpawnSpeed        
+
+
+#if SERVER
+global function Equipment_GetRespawnKitEnabled
+global function Equipment_GetRespawnKit_PrimaryWeapon
+global function Equipment_GetRespawnKit_SecondaryWeapon
+global function Equipment_GetRespawnKit_Tactical
+global function Equipment_GetRespawnKit_Ultimate
+#endif
+
 global const NO_CHOICES = 2
-global const LOCATION_CUTSCENE_DURATION = 9
-global const SCORE_GOAL_TO_WIN = 3
+global const SCORE_GOAL_TO_WIN = 100
 
 global enum eTDMAnnounce
 {
@@ -30,7 +50,8 @@ global struct LocPair
     vector angles = <0, 0, 0>
 }
 
-global struct LocationSettings {
+global struct LocationSettings 
+{
     string name
     array<LocPair> spawns
     vector cinematicCameraOffset
@@ -41,6 +62,7 @@ global struct WeaponKit
     string weapon
     array<string> mods
 }
+
 
 struct {
     LocationSettings &selectedLocation
@@ -55,8 +77,6 @@ struct {
 
 void function Sh_CustomTDM_Init() 
 {
-
-Remote_RegisterClientFunction("ServerCallback_TDM_DoVictoryAnnounce", "int", 0, 255)
     // Map locations
 
     switch(GetMapName())
@@ -262,7 +282,20 @@ Remote_RegisterClientFunction("ServerCallback_TDM_DoVictoryAnnounce", "int", 0, 
                         NewLocPair(<22970, 27159, -4612.43>, <0, 135, 0>),
                         NewLocPair(<20430, 26361, -4140>, <0, 135, 0>),
                         NewLocPair(<19142, 30982, -4612>, <0, -45, 0>),
-                        NewLocPair(<18285, 28502, -4140>, <0, -45, 0>)
+                        NewLocPair(<18285, 28502, -4140>, <0, -45, 0>),
+                        NewLocPair(<19228, 25592, -4821>, <0, 135, 0>),
+                        NewLocPair(<19495, 29283, -4821>, <0, -45, 0>),
+                        NewLocPair(<18470, 28330, -4315>, <0, 135, 0>),
+                        NewLocPair(<18431, 28405, -4139>, <0, 45, 0>),
+                        NewLocPair(<18284, 28492, -3992>, <0, -45, 0>),
+                        NewLocPair(<19428, 27190, -4140>, <0, -45, 0>),
+                        NewLocPair(<20435, 26254, -4139>, <0, -175, 0>),
+                        NewLocPair(<20222, 26549, -4316>, <0, 135, 0>),
+                        NewLocPair(<19444, 25605, -4572>, <0, 45, 0>),
+                        NewLocPair(<21751, 29980, -4226>, <0, -135, 0>),
+                        NewLocPair(<17570, 26915, -4637>, <0, -90, 0>),
+                        NewLocPair(<16382, 28296, -4588>, <0, -45, 0>),
+                        NewLocPair(<16618, 28848, -4451>, <0, 40, 0>),
                     ],
                     <0, 0, 6500>
                 )
@@ -270,14 +303,24 @@ Remote_RegisterClientFunction("ServerCallback_TDM_DoVictoryAnnounce", "int", 0, 
 			
             Shared_RegisterLocation(
                 NewLocationSettings(
-                    "Geyser Cave",
+                    "Banana",
                     [
-                        NewLocPair(<26330, -3506, -3933>, <8, -177, 0>),
-                        NewLocPair(<24159, -4296, -3915>, <-2.5, 92, 0>),
-                        NewLocPair(<22322, -3326, -3920>, <0, 0, 0>),
-                        NewLocPair(<24199, -2370, -3914>, <0, -90, 0>)
+                        NewLocPair(<9213, -22942, -3571>, <0, -120, 0>),
+                        NewLocPair(<7825, -24577, -3547>, <0, -165, 0>),
+                        NewLocPair(<5846, -25513, -3523>, <0, 180, 0>),
+                        NewLocPair(<4422, -25937, -3571>, <0, 90, 0>),
+                        NewLocPair(<4056, -25017, -3571>, <0, -170, 0>),
+                        NewLocPair(<1970, -25267, -3627>, <-5, 45, 0>),
+                        NewLocPair(<2068, -25171, -3318>, <15, 45, 0>),
+                        NewLocPair(<2197, -22687, -3572>, <-3, -90, 0>),
+                        NewLocPair(<7081, -23051, -3667>, <0, 45, 0>),
+                        NewLocPair(<8922, -22135, -3119>, <0, 180, 0>),
+                        NewLocPair(<5436, -22436, -3188>, <0, 90, 0>),
+                        NewLocPair(<4254, -23031, -3522>, <0, 45, 0>),
+                        NewLocPair(<8211, -21413, -3667>, <0, -140, 0>),
+                        NewLocPair(<4277, -24101, -3571>, <0, -60, 0>)
                     ],
-                    <0, 0, 250>
+                    <0, 0, 3000>
                 )
             )
 
@@ -288,7 +331,21 @@ Remote_RegisterClientFunction("ServerCallback_TDM_DoVictoryAnnounce", "int", 0, 
                         NewLocPair(<11393, 5477, -4289>, <0, 90, 0>),
                         NewLocPair(<12027, 7121, -4290>, <0, -120, 0>),
                         NewLocPair(<8105, 6156, -4266>, <0, -45, 0>),
-                        NewLocPair(<7965.0, 5976.0, -4266.0>, <0, -135, 0>)
+                        NewLocPair(<7965.0, 5976.0, -4266.0>, <0, -135, 0>),
+                        NewLocPair(<9420, 5528, -4236>, <0, 90, 0>),
+                        NewLocPair(<9862, 5561, -3832>, <0, 180, 0>),
+                        NewLocPair(<9800, 5347, -3507>, <0, 134, 0>),
+                        NewLocPair(<8277, 6304, -3940>, <0, 0, 0>),
+                        NewLocPair(<8186, 5513, -3828>, <0, 0, 0>),
+                        NewLocPair(<8243, 4537, -4235>, <-13, 32, 0>),
+                        NewLocPair(<10176, 4245, -4239>, <0, 100, 0>),
+                        NewLocPair(<11700, 6207, -4435>, <-10, 90, 0>),
+                        NewLocPair(<11181, 5862, -3900>, <0, -180, 0>),
+                        NewLocPair(<10410, 5211, -4243>, <0, -90, 0>),
+                        NewLocPair(<9043, 5866, -4171>, <0, 90, 0>),
+                        NewLocPair(<10107, 3843, -3951>, <0, 90, 0>),
+                        NewLocPair(<11210, 4164, -4235>, <0, 90, 0>)
+                        
                     ],
                     <0, 0, 3000>
                 )
@@ -300,8 +357,17 @@ Remote_RegisterClientFunction("ServerCallback_TDM_DoVictoryAnnounce", "int", 0, 
                     [
                         NewLocPair(<-20091, -17683, -3984>, <0, -90, 0>),
 						NewLocPair(<-22919, -20528, -4010>, <0, 0, 0>),
-                        NewLocPair(<-20109, -23193, -4252>, <0, 90, 0>),
-						NewLocPair(<-17140, -20710, -3973>, <0, -180, 0>)
+                        NewLocPair(<-17140, -20710, -3973>, <0, -180, 0>),
+                        NewLocPair(<-21054, -23399, -3850>, <0, 90, 0>),
+                        NewLocPair(<-20938, -23039, -4252>, <0,90, 0>),
+                        NewLocPair(<-19361, -23083, -4252>, <0, 100, 0>),
+                        NewLocPair(<-19264, -23395, -3850>, <0, 100, 0>),
+                        NewLocPair(<-16756, -20711, -3982>, <0, 180, 0>),
+                        NewLocPair(<-17066, -20746, -4233>, <0, 180, 0>),
+                        NewLocPair(<-17113, -19622, -4269>, <10, -170, 0>),
+                        NewLocPair(<-20092, -17684, -4252>, <0, -90, 0>),
+                        NewLocPair(<-23120, -20694, -4216>, <-11, 146, 0>),
+                        NewLocPair(<-20109, -20675, -4252>, <0, -90, 0>)
                     ],
                     <0, 0, 11000>
                 )
@@ -322,14 +388,24 @@ Remote_RegisterClientFunction("ServerCallback_TDM_DoVictoryAnnounce", "int", 0, 
 			
             Shared_RegisterLocation(
                 NewLocationSettings(
-                    "The Dome",
+                    "Lava City",
                     [
-                        NewLocPair(<17445.83, -36838.45, -2160.64>, <-2.20, -37.85, 0>),
-						NewLocPair(<17405.53, -39860.60, -2248>, <-6, -52, 0>),
-                        NewLocPair(<21700.48, -40169, -2164.30>, <2, 142, 0>),
-						NewLocPair(<20375.39, -36068.25, -2248>, <-1, -128, 0>)
+                        NewLocPair(<22663, -28134, -2706>, <0, 40, 0>),
+                        NewLocPair(<22844, -28222, -3030>, <0, 90, 0>),
+                        NewLocPair(<22687, -27605, -3434>, <0, -90, 0>),
+                        NewLocPair(<22610, -26999, -2949>, <0, 90, 0>),
+                        NewLocPair(<22607, -26018, -2749>, <0, -90, 0>),
+                        NewLocPair(<22975, -25792, -3437>, <0, -120, 0>),
+                        NewLocPair(<24235, -27378, -3305>, <0, -100, 0>),
+                        NewLocPair(<24345, -28872, -3433>, <0, -144, 0>),
+                        NewLocPair(<24446, -28628, -3252>, <13, 0, 0>),
+                        NewLocPair(<23931, -28043, -3265>, <0, 0, 0>),
+                        NewLocPair(<27399, -28588, -3721>, <0, 130, 0>),
+                        NewLocPair(<26610, -25784, -3391>, <0, -90, 0>),
+                        NewLocPair(<26757, -26639, -3673>, <-10, 90, 0>),
+                        NewLocPair(<26750, -26202, -3929>, <-10, -90, 0>)
                     ],
-                    <0, 0, 2850>
+                    <0, 0, 3000>
                 )
             )
 
@@ -343,14 +419,6 @@ Remote_RegisterClientFunction("ServerCallback_TDM_DoVictoryAnnounce", "int", 0, 
     
 }
 
-WeaponKit function NewWeaponKit(string weapon, array<string> mods)
-{
-    WeaponKit weaponKit
-    weaponKit.weapon = weapon
-    weaponKit.mods = mods
-    
-    return weaponKit
-}
 
 LocPair function NewLocPair(vector origin, vector angles)
 {
@@ -371,6 +439,14 @@ LocationSettings function NewLocationSettings(string name, array<LocPair> spawns
     return locationSettings
 }
 
+WeaponKit function NewWeaponKit(string weapon, array<string> mods)
+{
+    WeaponKit weaponKit
+    weaponKit.weapon = weapon
+    weaponKit.mods = mods
+    
+    return weaponKit
+}
 
 void function Shared_RegisterLocation(LocationSettings locationSettings)
 {
@@ -387,3 +463,69 @@ void function Shared_RegisterLocation(LocationSettings locationSettings)
 }
 
 
+// Playlist GET
+
+float function Deathmatch_GetIntroCutsceneNumSpawns()                { return GetCurrentPlaylistVarFloat("intro_cutscene_num_spawns", 5)}
+float function Deathmatch_GetIntroCutsceneSpawnDuration()            { return GetCurrentPlaylistVarFloat("intro_cutscene_spawn_duration", 5)}
+float function Deathmatch_GetIntroSpawnSpeed()                       { return GetCurrentPlaylistVarFloat("intro_cutscene_spawn_speed", 40)}
+bool function Spectator_GetReplayIsEnabled()                         { return GetCurrentPlaylistVarBool("replay_enabled", false ) } 
+float function Spectator_GetReplayDelay()                            { return GetCurrentPlaylistVarFloat("replay_delay", 1 ) } 
+float function Deathmatch_GetRespawnDelay()                          { return GetCurrentPlaylistVarFloat("respawn_delay", 8) }
+float function Equipment_GetDefaultShieldHP()                        { return GetCurrentPlaylistVarFloat("default_shield_hp", 100) }
+float function Deathmatch_GetOOBDamagePercent()                      { return GetCurrentPlaylistVarFloat("oob_damage_percent", 25) }
+float function Deathmatch_GetVotingTime()                            { return GetCurrentPlaylistVarFloat("voting_time", 5) }
+bool function CMD_GetTGiveEnabled()                                  { return GetCurrentPlaylistVarBool("tgive_enabled", true) }
+
+#if SERVER      
+bool function Equipment_GetRespawnKitEnabled()                       { return GetCurrentPlaylistVarBool("respawn_kit_enabled", false) }
+
+StoredWeapon function Equipment_GetRespawnKit_PrimaryWeapon()
+{ 
+    return Equipment_GetRespawnKit_Weapon(
+        GetCurrentPlaylistVarString("respawn_kit_primary_weapon", "~~none~~"),
+        eStoredWeaponType.main,
+        WEAPON_INVENTORY_SLOT_PRIMARY_0
+    ) 
+}
+StoredWeapon function Equipment_GetRespawnKit_SecondaryWeapon()
+{ 
+    return Equipment_GetRespawnKit_Weapon(
+        GetCurrentPlaylistVarString("respawn_kit_secondary_weapon", "~~none~~"),
+        eStoredWeaponType.main,
+        WEAPON_INVENTORY_SLOT_PRIMARY_1
+    )
+}
+StoredWeapon function Equipment_GetRespawnKit_Tactical()
+{ 
+    return Equipment_GetRespawnKit_Weapon(
+        GetCurrentPlaylistVarString("respawn_kit_tactical", "~~none~~"),
+        eStoredWeaponType.offhand,
+        OFFHAND_TACTICAL
+    )
+}
+StoredWeapon function Equipment_GetRespawnKit_Ultimate()
+{ 
+    return Equipment_GetRespawnKit_Weapon(
+        GetCurrentPlaylistVarString("respawn_kit_ultimate", "~~none~~"),
+        eStoredWeaponType.offhand,
+        OFFHAND_ULTIMATE
+    )
+}
+
+StoredWeapon function Equipment_GetRespawnKit_Weapon(string input, int type, int index)
+{
+    StoredWeapon weapon
+    if(input == "~~none~~") return weapon
+
+    array<string> args = split(input, " ")
+
+    if(args.len() == 0) return weapon
+
+    weapon.name = args[0]
+    weapon.weaponType = type
+    weapon.inventoryIndex = index
+    weapon.mods = args.slice(1, args.len())
+
+    return weapon
+}
+#endif

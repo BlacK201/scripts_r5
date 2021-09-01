@@ -54,3 +54,5 @@
 "blank"					  				"#BINDINGS_HEADER_MISCELLANEOUS"
 "blank"					  				"=========================="
 "jpeg"					  				"#SCREENSHOT"
+"toggleCustom"			  				"#PUSH_TO_TALK_KEY"
+"toggleOpenTDMMenu"                     "#OPEN_TDM_MENU"

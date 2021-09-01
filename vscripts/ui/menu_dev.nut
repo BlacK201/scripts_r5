@@ -9,12 +9,17 @@ global function SetupDevMenu
 global function RepeatLastDevCommand
 global function UpdatePrecachedSPWeapons
 global function ServerCallback_OpenDevMenu
+//open tdm menu
+global function ServerCallback_OpenTDMMenu
+global function ServerCallback_ChangeToTDMMenu
+
 global function RunCodeDevCommandByAlias
 global function DEV_ExecBoundDevMenuCommand
 global function DEV_InitCodeDevMenu
 #endif
 
 global function AddLevelDevCommand
+
 
 const string DEV_MENU_NAME = "[LEVEL]"
 
@@ -130,7 +135,6 @@ void function OnOpenDevMenu()
 	//DelayedFocusFirstButton()
 }
 
-
 //void function DelayedFocusFirstButton()
 //{
 //	//Hud_SetFocused( file.buttons[0] )
@@ -146,7 +150,18 @@ void function ServerCallback_OpenDevMenu()
 {
 	AdvanceMenu( GetMenu( "DevMenu" ) )
 }
+//open tdm menu
+void function ServerCallback_OpenTDMMenu()
+{
+	AdvanceMenu( GetMenu( "DevMenu" ) )
+}
 
+//open tdm menu
+void function ServerCallback_ChangeToTDMMenu()
+{
+	//printt("OpenMenuFinished")
+	thread ChangeToThisMenu( SetupTDM )
+}
 
 void function DEV_InitCodeDevMenu()
 {
@@ -243,6 +258,8 @@ void function ChangeToThisMenu( void functionref() menuFunc )
 		menuFunc()
 		return
 	}
+	printt("change to this menu")
+
 	PushPageHistory()
 	file.currentPage.devMenuFunc = menuFunc
 	file.currentPage.devMenuFuncWithOpParm = null
@@ -270,7 +287,7 @@ void function SetupDefaultDevCommandsMP()
 {
 	SetupDevMenu( "Abilities", SetDevMenu_Abilities )
 	SetupDevMenu( "Equip Weapon", SetDevMenu_Weapons )
-        SetupDevMenu( "TDM Weapon", SetDevMenu_TDMWeapons )
+        SetupDevMenu( "TDM", SetDevMenu_TDM )
 	SetupDevMenu( "MDLSpawner", SetDevMenu_ModelSpawner )
 
 	if ( IsSurvivalMenuEnabled() )
@@ -404,9 +421,9 @@ void function SetDevMenu_Weapons( var _ )
 {
 	thread ChangeToThisMenu( SetupWeapons )
 }
-void function SetDevMenu_TDMWeapons( var _ )
+void function SetDevMenu_TDM( var _ )
 {
-	thread ChangeToThisMenu( SetupTDMweapsons )
+	thread ChangeToThisMenu( SetupTDM )
 }
 void function SetDevMenu_SurvivalCharacter( var _ )
 {
@@ -696,30 +713,44 @@ void function SetupRespawnPlayersDevMenu()
 	//	SetupDevCommand( "Respawn player: " + player.GetPlayerName(), "respawn " + player.GetEntIndex() )
 	//}
 }
-void function SetupTDMweapsons()
+void function SetupTDM()
 {
-	SetupDevCommand( "2x R99", "tgive p mp_weapon_r97 optic_cq_hcog_bruiser stock_tactical_l3 barrel_stabilizer_l4_flash_hider bullets_mag_l3" )
-	SetupDevCommand( "3x G7 ", "tgive p mp_weapon_g2 optic_ranged_hcog stock_sniper_l3 barrel_stabilizer_l4_flash_hider bullets_mag_l3 hopup_double_tap" )
-	SetupDevCommand( "2x re45", "tgive p mp_weapon_autopistol optic_cq_hcog_bruiser barrel_stabilizer_l4_flash_hider bullets_mag_l3" )
-	SetupDevCommand( "2x r301", "tgive p mp_weapon_rspn101 optic_cq_hcog_bruiser stock_tactical_l3 barrel_stabilizer_l4_flash_hider bullets_mag_l3" )
-	SetupDevCommand( "1x p2020", "tgive p mp_weapon_semipistol optic_cq_hcog_classic bullets_mag_l3 hopup_unshielded_dmg" )
-	SetupDevCommand( "2x Alternator", "tgive p mp_weapon_alternator_smg optic_cq_hcog_bruiser stock_tactical_l3 barrel_stabilizer_l4_flash_hider bullets_mag_l3" )
-	SetupDevCommand( "2x hemlok", "tgive p mp_weapon_hemlok optic_cq_hcog_bruiser stock_tactical_l3 barrel_stabilizer_l4_flash_hider highcal_mag_l3" )
-	SetupDevCommand( "2x flatline", "tgive p mp_weapon_vinson optic_cq_hcog_bruiser stock_tactical_l3 highcal_mag_l3")
-	SetupDevCommand( "2x Spitfire", "tgive p mp_weapon_lmg optic_cq_hcog_bruiser stock_tactical_l3 barrel_stabilizer_l4_flash_hider highcal_mag_l3" )
-        SetupDevCommand( "1x Prowler", "tgive p mp_weapon_pdw optic_cq_hcog_classic stock_tactical_l3 highcal_mag_l3" )
-        SetupDevCommand( "1x wingman", "tgive p mp_weapon_wingman optic_cq_hcog_classic highcal_mag_l3" )
-        SetupDevCommand( "4-8x longbow", "tgive p mp_weapon_dmr optic_sniper_variable barrel_stabilizer_l4_flash_hider stock_sniper_l3 highcal_mag_l3" )
-        SetupDevCommand( "4-10x Charge Rifle", "tgive p mp_weapon_defender optic_sniper_threat stock_sniper_l3" )
-        SetupDevCommand( "2x Devotion", "tgive p mp_weapon_esaw optic_cq_hcog_bruiser stock_tactical_l3 barrel_stabilizer_l4_flash_hider energy_mag_l3 hopup_turbocharger" )
-        SetupDevCommand( "2x Havoc", "tgive p mp_weapon_energy_ar optic_cq_hcog_bruiser stock_tactical_l3 energy_mag_l3 hopup_turbocharger" )
-        SetupDevCommand( "1x EVA8", "tgive s mp_weapon_shotgun shotgun_bolt_l3 optic_cq_hcog_classic hopup_double_tap" )
-        SetupDevCommand( "1x Mozambique", "tgive s mp_weapon_shotgun_pistol shotgun_bolt_l3 optic_cq_hcog_classic hopup_unshielded_dmg" )
-        SetupDevCommand( "1x Peacekeeper", "tgive s mp_weapon_energy_shotgun shotgun_bolt_l3 optic_cq_hcog_classic hopup_energy_choke" )
-        SetupDevCommand( "3x Triple Take", "tgive p mp_weapon_doubletake energy_mag_l3 optic_ranged_hcog stock_sniper_l3 hopup_energy_choke" )
-        SetupDevCommand( "Kraber", "tgive p mp_weapon_sniper" )
-        SetupDevCommand( "Lstar", "tgive p mp_weapon_lstar" )
-        SetupDevCommand( "Mastiff","tgive s mp_weapon_mastiff")
+	SetupDevCommand( "1倍镜 R99", "tgive p mp_weapon_r97 optic_cq_hcog_classic stock_tactical_l3 barrel_stabilizer_l4_flash_hider bullets_mag_l3" )
+	SetupDevCommand( "3倍镜 G7 ", "tgive p mp_weapon_g2 optic_ranged_hcog stock_sniper_l3 barrel_stabilizer_l4_flash_hider bullets_mag_l3 hopup_double_tap" )
+	SetupDevCommand( "2倍镜 re45", "tgive p mp_weapon_autopistol optic_cq_hcog_bruiser barrel_stabilizer_l4_flash_hider bullets_mag_l3" )
+	SetupDevCommand( "2倍镜 r301", "tgive p mp_weapon_rspn101 optic_cq_hcog_bruiser stock_tactical_l3 barrel_stabilizer_l4_flash_hider bullets_mag_l3" )
+	SetupDevCommand( "1倍镜 p2020", "tgive p mp_weapon_semipistol optic_cq_hcog_classic bullets_mag_l3 hopup_unshielded_dmg" )
+	SetupDevCommand( "2倍镜 转换者", "tgive p mp_weapon_alternator_smg optic_cq_hcog_bruiser stock_tactical_l3 barrel_stabilizer_l4_flash_hider bullets_mag_l3" )
+	SetupDevCommand( "2倍镜 赫姆洛克", "tgive p mp_weapon_hemlok optic_cq_hcog_bruiser stock_tactical_l3 barrel_stabilizer_l4_flash_hider highcal_mag_l3" )
+	SetupDevCommand( "2倍镜 平行步枪", "tgive p mp_weapon_vinson optic_cq_hcog_bruiser stock_tactical_l3 highcal_mag_l3")
+	SetupDevCommand( "2倍镜 喷火轻机枪", "tgive p mp_weapon_lmg optic_cq_hcog_bruiser stock_tactical_l3 barrel_stabilizer_l4_flash_hider highcal_mag_l3" )
+        SetupDevCommand( "1倍镜 猎兽", "tgive p mp_weapon_pdw optic_cq_hcog_classic stock_tactical_l3 highcal_mag_l3" )
+        SetupDevCommand( "1倍镜 小帮手", "tgive p mp_weapon_wingman optic_cq_hcog_classic highcal_mag_l3" )
+        SetupDevCommand( "4-8倍镜 长弓狙击枪", "tgive p mp_weapon_dmr optic_sniper_variable barrel_stabilizer_l4_flash_hider stock_sniper_l3 highcal_mag_l3" )
+        SetupDevCommand( "4-10倍镜 充能步枪", "tgive p mp_weapon_defender optic_sniper_threat stock_sniper_l3" )
+        SetupDevCommand( "2倍镜 专注轻机枪", "tgive p mp_weapon_esaw optic_cq_hcog_bruiser stock_tactical_l3 barrel_stabilizer_l4_flash_hider energy_mag_l3 hopup_turbocharger" )
+        SetupDevCommand( "2倍镜 哈沃克", "tgive p mp_weapon_energy_ar optic_cq_hcog_bruiser stock_tactical_l3 energy_mag_l3 hopup_turbocharger" )
+        SetupDevCommand( "1倍镜 EVA8", "tgive s mp_weapon_shotgun shotgun_bolt_l3 optic_cq_hcog_classic hopup_double_tap" )
+        SetupDevCommand( "1倍镜 莫桑比克", "tgive s mp_weapon_shotgun_pistol shotgun_bolt_l3 optic_cq_hcog_classic hopup_unshielded_dmg" )
+        SetupDevCommand( "1倍镜 和平霰弹枪", "tgive s mp_weapon_energy_shotgun shotgun_bolt_l3 optic_cq_hcog_classic hopup_energy_choke" )
+        SetupDevCommand( "3倍镜 三重狙击枪", "tgive p mp_weapon_doubletake energy_mag_l3 optic_ranged_hcog stock_sniper_l3 hopup_energy_choke" )
+        SetupDevCommand( "克雷贝尔狙击枪", "tgive p mp_weapon_sniper" )
+        SetupDevCommand( "L-star", "tgive p mp_weapon_lstar" )
+        SetupDevCommand( "獒犬霰弹枪","tgive s mp_weapon_mastiff")
+        SetupDevCommand( "班加罗尔 战术技能","tgive t mp_weapon_grenade_bangalore")
+        SetupDevCommand( "寻血猎犬 战术技能","tgive t mp_ability_area_sonar_scan")
+        SetupDevCommand( "毒气 战术技能","tgive t mp_weapon_dirty_bomb")
+        SetupDevCommand( "密客 战术技能","tgive t mp_ability_crypto_drone")
+        SetupDevCommand( "直布罗陀 战术技能","tgive t mp_weapon_bubble_bunker")
+        SetupDevCommand( "命脉 战术技能","tgive t mp_weapon_deployable_medic")
+        SetupDevCommand( "幻象 战术技能","tgive t mp_ability_holopilot")
+        SetupDevCommand( "动力小子 战术技能","tgive t mp_ability_heal")
+        SetupDevCommand( "探路者 战术技能","tgive t mp_ability_grapple")
+        SetupDevCommand( "恶灵 战术技能","tgive t mp_ability_phase_walk")
+        SetupDevCommand( "脉冲刀 战术技能","tgive t mp_weapon_grenade_sonar")
+        SetupDevCommand( "闪现 战术技能","tgive t mp_ability_3dash")
+        SetupDevCommand( "电子烟 战术技能","tgive t mp_weapon_grenade_electric_smoke")
+        
 
 
 

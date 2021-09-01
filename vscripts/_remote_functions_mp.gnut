@@ -25,11 +25,15 @@ void function RemoteFunctions_Init_Begin()
 
 
 	// Custom
+	Remote_RegisterClientFunction("ServerCallback_TDM_DoVictoryAnnounce", "int", 0, 255)
+    Remote_RegisterClientFunction("ServerCallback_OpenTDMMenu" )
 	Remote_RegisterClientFunction("ServerCallback_TDM_DoAnnouncement", "float", 0.0, 256.0, 32, "int", 0, 255)
 	Remote_RegisterClientFunction("ServerCallback_TDM_SetSelectedLocation","int", 0, 255)
 	Remote_RegisterClientFunction("ServerCallback_TDM_DoLocationIntroCutscene")
     Remote_RegisterClientFunction("ServerCallback_TDM_PlayerKilled")
     Remote_RegisterClientFunction("ServerCallback_DisplayJumpPadHint")
+	Remote_RegisterClientFunction("ServerCallback_KillReplayHud_Activate")
+	Remote_RegisterClientFunction("ServerCallback_KillReplayHud_Deactivate")
 
 
 	RegisterSignal("OnChangedPlayerClass")
@@ -512,6 +516,7 @@ void function RemoteFunctions_Init_Begin()
 
 	//
 	Remote_RegisterUntypedFunction_deprecated( "ServerCallback_OpenDevMenu" )
+	Remote_RegisterUntypedFunction_deprecated( "ServerCallback_OnOpenTDMDevMenu" )
 
 	Remote_RegisterUntypedFunction_deprecated( "ServerCallback_SetUIVar" )
 	Remote_RegisterUIFunction( "ServerCallback_OpenPilotLoadoutMenu" )

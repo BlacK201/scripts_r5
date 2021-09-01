@@ -117,6 +117,9 @@ void function Survival_AddPassthroughCommandsToMenu( var menu )
 	AddCommandForMenuToPassThrough( menu, "toggle_map" )
 	AddCommandForMenuToPassThrough( menu, "+scriptCommand3" )
 	AddCommandForMenuToPassThrough( menu, "say_team" )
+
+	//test
+	AddCommandForMenuToPassThrough( menu, "toggleOpenTDMMenu" )
 }
 
 

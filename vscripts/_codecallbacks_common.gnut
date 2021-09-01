@@ -590,6 +590,13 @@ void function AddCallback_OnUpdateDerivedPilotLoadout( void functionref( PilotLo
 void function AddClientCommandCallback( string commandString, bool functionref( entity player, array<string> args ) callbackFunc )
 {
 	Assert( !( commandString in svGlobal.clientCommandCallbacks ), "Already added " + commandString + " with AddClientCommandCallback" )
+	//debug
+	/*
+	foreach(k,v in svGlobal.clientCommandCallbacks)
+	{
+		printt("key : " + k)
+	}
+	*/
 	svGlobal.clientCommandCallbacks[ commandString ] <- callbackFunc
 }
 

@@ -85,7 +85,7 @@ WeaponData
 
 	"critical_hit_damage_scale"						"1"
 
-	"ammo_clip_size"   								"3"
+	"ammo_clip_size"   								"6"
 	"ammo_per_shot"									"1"
 
 	"ammo_no_remove_from_stockpile"					"1"

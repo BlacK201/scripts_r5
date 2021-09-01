@@ -4,6 +4,7 @@ global function ServerCallback_TDM_DoAnnouncement
 global function ServerCallback_TDM_SetSelectedLocation
 global function ServerCallback_TDM_DoLocationIntroCutscene
 global function ServerCallback_TDM_PlayerKilled
+global function ServerCallback_OpenTDMMenu
 global function ServerCallback_TDM_DoVictoryAnnounce
 
 global function Cl_RegisterLocation
@@ -17,16 +18,27 @@ struct {
     var victoryRui
 } file;
 
+struct PlayerInfo 
+{
+	string name
+	int team
+	int score
+}
+
 global int maxTeam = 0;
 
 void function Cl_CustomTDM_Init()
 {
     printf("cl_customTDM_init")
+    
 }
+
+
 
 void function Cl_RegisterLocation(LocationSettings locationSettings)
 {
     file.locationSettings.append(locationSettings)
+    
 }
 
 
@@ -34,7 +46,7 @@ void function MakeScoreRUI()
 {
     if ( file.scoreRui != null)
     {
-        RuiSetString( file.scoreRui, "messageText", "Team IMC: 0  ||  Team MIL: 0" )
+        RuiSetString( file.scoreRui, "messageText", "Initialize Score Board..." )
         return
     }
     clGlobal.levelEnt.EndSignal( "CloseScoreRUI" )
@@ -152,11 +164,12 @@ void function ServerCallback_TDM_DoLocationIntroCutscene()
 void function ServerCallback_TDM_DoLocationIntroCutscene_Body()
 {
     entity player = GetLocalClientPlayer()
-    
-    if(IsValid(player))
-        EmitSoundOnEntity( player, "music_skyway_04_smartpistolrun" )
-     
-    float playerFOV = player.GetFOV()
+    float desiredSpawnSpeed = Deathmatch_GetIntroSpawnSpeed()
+    float desiredSpawnDuration = Deathmatch_GetIntroCutsceneSpawnDuration()
+    float desireNoSpawns = Deathmatch_GetIntroCutsceneNumSpawns()
+
+    if(!IsValid(player)) return
+    EmitSoundOnEntity( player, "music_skyway_04_smartpistolrun" )
     
     entity camera = CreateClientSidePointCamera(file.selectedLocation.spawns[0].origin + file.selectedLocation.cinematicCameraOffset, <90, 90, 0>, 17)
     camera.SetFOV(90)
@@ -166,34 +179,34 @@ void function ServerCallback_TDM_DoLocationIntroCutscene_Body()
     wait 1
 
 	GetLocalClientPlayer().SetMenuCameraEntity( camera )
+    ////////////////////////////////////////////////////////////////////////////////
+    ///////// EFFECTIVE CUTSCENE CODE START
 
-
-    for(int i = 0; i < file.selectedLocation.spawns.len(); i++)
+    array<LocPair> cutsceneSpawns
+    for(int i = 0; i < desireNoSpawns; i++)
     {
-        entity spawn = CreateClientSidePropDynamic(OriginToGround(file.selectedLocation.spawns[i].origin), <0, 0, 0>, $"mdl/dev/empty_model.rmdl" )
-        thread CreateTemporarySpawnRUI(spawn, LOCATION_CUTSCENE_DURATION + 2)
+        if(!cutsceneSpawns.len())
+            cutsceneSpawns = clone file.selectedLocation.spawns
+
+        LocPair spawn = cutsceneSpawns.getrandom()
+        cutsceneSpawns.fastremovebyvalue(spawn)
+
+        cutsceneMover.SetOrigin(spawn.origin)
+        camera.SetAngles(spawn.angles)
+
+        cutsceneMover.NonPhysicsMoveTo(spawn.origin + AnglesToForward(spawn.angles) * desiredSpawnDuration * desiredSpawnSpeed, desiredSpawnDuration, 0, 0)
+        wait desiredSpawnDuration
     }
 
-    for(int i = 1; i < file.selectedLocation.spawns.len(); i++)
-    {
 
-        float duration = LOCATION_CUTSCENE_DURATION / max(1, file.selectedLocation.spawns.len() - 1)
-        cutsceneMover.NonPhysicsMoveTo(file.selectedLocation.spawns[i].origin + file.selectedLocation.cinematicCameraOffset, duration, 0, 0)
-        wait duration
-    }
+    ///////// EFFECTIVE CUTSCENE CODE END
+    ////////////////////////////////////////////////////////////////////////////////
 
-    wait 1
-    cutsceneMover.NonPhysicsMoveTo(GetLocalClientPlayer().GetOrigin() + <0, 0, 100>, 2, 0, 0)
-    cutsceneMover.NonPhysicsRotateTo(GetLocalClientPlayer().GetAngles(), 2, 0, 0)
-	camera.SetTargetFOV(playerFOV, true, EASING_CUBIC_INOUT, 2 )
 
-    wait 2
     GetLocalClientPlayer().ClearMenuCameraEntity()
     cutsceneMover.Destroy()
-    
-    player = GetLocalClientPlayer()
-    if(IsValid(player))
-        FadeOutSoundOnEntity( player, "music_skyway_04_smartpistolrun", 1 )
+
+    FadeOutSoundOnEntity( player, "music_skyway_04_smartpistolrun", 1 )
     
     camera.Destroy()
     
@@ -205,19 +218,54 @@ void function ServerCallback_TDM_SetSelectedLocation(int sel)
     file.selectedLocation = file.locationSettings[sel]
 }
 
+
+//open tdm menu
+void function ServerCallback_OpenTDMMenu()
+{  
+    RunUIScript("ServerCallback_OpenTDMMenu")
+    RunUIScript("ServerCallback_ChangeToTDMMenu")
+}
+
+
 void function ServerCallback_TDM_PlayerKilled()
 {
     if(file.scoreRui)
     {
-        string msg = ""
+        
+        array<PlayerInfo> playersInfo = []
+
         foreach(player in GetPlayerArray())
         {
-            msg = msg + player.GetPlayerName() + ": " + GameRules_GetTeamScore(player.GetTeam()) + "\n"
+            PlayerInfo p
+            p.name = player.GetPlayerName()
+            p.team = player.GetTeam()
+            p.score = GameRules_GetTeamScore(player.GetTeam())
+            //PlayerInfo p = { name = player.GetPlayerName(), team = player.GetTeam(), score = GameRules_GetTeamScore(player.GetTeam()) }
+            playersInfo.append(p)
         }
 
+        
+        playersInfo.sort(ComparePlayerInfo)
+
+        string msg = ""
+
+        for(int i = 0; i < playersInfo.len(); i++)
+	    {	
+		    PlayerInfo p = playersInfo[i]
+           // printt("playername : " + p.name + "  score : " + p.score)
+		    msg = msg + p.name + ": " + p.score + "\n"
+	    }
+        
         RuiSetString( file.scoreRui, "messageText", msg);
     }
         
+}
+
+int function ComparePlayerInfo(PlayerInfo a, PlayerInfo b)
+{
+	if(a.score < b.score) return 1;
+	else if(a.score > b.score) return -1;
+	return 0; 
 }
 
 var function CreateTemporarySpawnRUI(entity parentEnt, float duration)
