@@ -84,7 +84,7 @@ void function Sh_CustomTDM_Init()
     case "mp_rr_canyonlands_staging":
         Shared_RegisterLocation(
             NewLocationSettings(
-                "Firing Range",
+                "靶场",
                 [
                     NewLocPair(<33560, -8992, -29126>, <0, 90, 0>),
 					NewLocPair(<34525, -7996, -28242>, <0, 100, 0>),
@@ -101,7 +101,7 @@ void function Sh_CustomTDM_Init()
     case "mp_rr_canyonlands_64k_x_64k":
         Shared_RegisterLocation(
             NewLocationSettings(
-                "Interstellar Relay",
+                "中继站",
                 [
                     //North Relay Building
                     NewLocPair(<26420, 31700, 4790>, <0, -90, 0>),
@@ -139,7 +139,7 @@ void function Sh_CustomTDM_Init()
 
         Shared_RegisterLocation(
             NewLocationSettings(
-                "Slum Lakes",
+                "棚屋湖",
                 [                   
                     //East Huge Building
                         //Inside
@@ -168,7 +168,7 @@ void function Sh_CustomTDM_Init()
         
         Shared_RegisterLocation(
             NewLocationSettings(
-                "Skull Town",
+                "骷髅镇",
                 [
                     NewLocPair(<-9320, -13528, 3167>, <0, -100, 0>),
                     NewLocPair(<-7544, -13240, 3161>, <0, -115, 0>),
@@ -181,7 +181,7 @@ void function Sh_CustomTDM_Init()
     
         Shared_RegisterLocation(
             NewLocationSettings(
-                "Little Town",
+                "镇外小房",
                 [
                     NewLocPair(<-30190, 12473, 3186>, <0, -90, 0>),
                     NewLocPair(<-28773, 11228, 3210>, <0, 180, 0>),
@@ -194,7 +194,7 @@ void function Sh_CustomTDM_Init()
     
         Shared_RegisterLocation(
             NewLocationSettings(
-                "Market",
+                "市场",
                 [
                     NewLocPair(<-110, -9977, 2987>, <0, 0, 0>),
                     NewLocPair(<-1605, -10300, 3053>, <0, -100, 0>),
@@ -207,7 +207,7 @@ void function Sh_CustomTDM_Init()
     
         Shared_RegisterLocation(
             NewLocationSettings(
-                "Runoff",
+                "径流",
                 [
                     NewLocPair(<-23380, 9634, 3371>, <0, 90, 0>),
                     NewLocPair(<-24917, 11273, 3085>, <0, 0, 0>),
@@ -220,7 +220,7 @@ void function Sh_CustomTDM_Init()
     
         Shared_RegisterLocation(
             NewLocationSettings(
-                "Thunderdome",
+                "雷霆堡",
                 [
                     NewLocPair(<-20216, -21612, 3191>, <0, -67, 0>),
                     NewLocPair(<-16035, -20591, 3232>, <0, -133, 0>),
@@ -233,7 +233,7 @@ void function Sh_CustomTDM_Init()
         
         Shared_RegisterLocation(
             NewLocationSettings(
-                "Water Treatment",
+                "净水厂",
                 [
                     NewLocPair(<5583, -30000, 3070>, <0, 0, 0>),
                     NewLocPair(<7544, -29035, 3061>, <0, 130, 0>),
@@ -247,7 +247,7 @@ void function Sh_CustomTDM_Init()
     
         Shared_RegisterLocation(
             NewLocationSettings(
-                "The Pit",
+                "坑洞",
                 [
                     NewLocPair(<-18558, 13823, 3605>, <0, 20, 0>),
                     NewLocPair(<-16514, 16184, 3772>, <0, -77, 0>),
@@ -261,7 +261,7 @@ void function Sh_CustomTDM_Init()
         
         Shared_RegisterLocation(
             NewLocationSettings(
-                "Airbase",
+                "机场",
                 [
                     NewLocPair(<-24140, -4510, 2583>, <0, 90, 0>),
                     NewLocPair(<-28675, 612, 2600>, <0, 18, 0>),
@@ -277,7 +277,7 @@ void function Sh_CustomTDM_Init()
         case "mp_rr_desertlands_64k_x_64k_nx":
 	        Shared_RegisterLocation(
                 NewLocationSettings(
-                    "Refinery",
+                    "精炼厂",
                     [
                         NewLocPair(<22970, 27159, -4612.43>, <0, 135, 0>),
                         NewLocPair(<20430, 26361, -4140>, <0, 135, 0>),
@@ -303,7 +303,7 @@ void function Sh_CustomTDM_Init()
 			
             Shared_RegisterLocation(
                 NewLocationSettings(
-                    "Banana",
+                    "分拣工厂",
                     [
                         NewLocPair(<9213, -22942, -3571>, <0, -120, 0>),
                         NewLocPair(<7825, -24577, -3547>, <0, -165, 0>),
@@ -326,7 +326,7 @@ void function Sh_CustomTDM_Init()
 
             Shared_RegisterLocation(
                 NewLocationSettings(
-                    "TTV Building",
+                    "主播快乐楼",
                     [
                         NewLocPair(<11393, 5477, -4289>, <0, 90, 0>),
                         NewLocPair(<12027, 7121, -4290>, <0, -120, 0>),
@@ -353,7 +353,7 @@ void function Sh_CustomTDM_Init()
 
             Shared_RegisterLocation(
                 NewLocationSettings(
-                    "Thermal Station",
+                    "热力站",
                     [
                         NewLocPair(<-20091, -17683, -3984>, <0, -90, 0>),
 						NewLocPair(<-22919, -20528, -4010>, <0, 0, 0>),
@@ -375,7 +375,7 @@ void function Sh_CustomTDM_Init()
 			
             Shared_RegisterLocation(
                 NewLocationSettings(
-                    "Lava Fissure",
+                    "熔岩裂缝",
                     [
                         NewLocPair(<-26550, 13746, -3048>, <0, -134, 0>),
 						NewLocPair(<-28877, 12943, -3109>, <0, -88.70, 0>),
@@ -388,7 +388,7 @@ void function Sh_CustomTDM_Init()
 			
             Shared_RegisterLocation(
                 NewLocationSettings(
-                    "Lava City",
+                    "岩浆城",
                     [
                         NewLocPair(<22663, -28134, -2706>, <0, 40, 0>),
                         NewLocPair(<22844, -28222, -3030>, <0, 90, 0>),

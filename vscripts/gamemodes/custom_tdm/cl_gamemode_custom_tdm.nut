@@ -15,6 +15,9 @@ struct {
     array choices
     array<LocationSettings> locationSettings
     var scoreRui
+    var score1Rui
+    var score2Rui
+    var score3Rui
     var victoryRui
 } file;
 
@@ -66,10 +69,11 @@ void function MakeScoreRUI()
     RuiSetString( rui, "messageText", msg )
     RuiSetString( rui, "messageSubText", "Text 2")
     RuiSetFloat( rui, "duration", 9999999 )
-    RuiSetFloat3( rui, "eventColor", SrgbToLinear( <128, 188, 255> ) )
+    RuiSetFloat3( rui, "eventColor", SrgbToLinear( <255, 0, 0> ) )
 	
     file.scoreRui = rui
-    
+
+
     OnThreadEnd(
 		function() : ( rui )
 		{
@@ -92,14 +96,14 @@ void function ServerCallback_TDM_DoAnnouncement(float duration, int type)
         case eTDMAnnounce.ROUND_START:
         {
             thread MakeScoreRUI();
-            message = "Round start"
+            message = "回合开始！"
             break
         }
         case eTDMAnnounce.VOTING_PHASE:
         {
             clGlobal.levelEnt.Signal( "CloseScoreRUI" )
-            message = "Welcome To Team Deathmatch"
-            subtext = "Made by sal (score UI by shrugtal)"
+            message = "欢迎来到死亡竞赛"
+            subtext = "sal与shrugtal制作(Neko与Black201优化，雪落汉化)"
             break
         }
         case eTDMAnnounce.MAP_FLYOVER:
@@ -253,8 +257,26 @@ void function ServerCallback_TDM_PlayerKilled()
 	    {	
 		    PlayerInfo p = playersInfo[i]
            // printt("playername : " + p.name + "  score : " + p.score)
-		    msg = msg + p.name + ": " + p.score + "\n"
-	    }
+            switch(i)
+            {
+                case 0:
+                    msg = msg + "1st " + p.name + ": " + p.score + "\n"
+                    break
+                case 1:
+                    msg = msg + "2nd " + p.name + ": " + p.score + "\n"
+                    break
+                case 2:
+                    msg = msg + "3rd " + p.name + ": " + p.score + "\n"
+                    break
+                default:
+                    msg = msg + p.name + ": " + p.score + "\n"
+                    break
+
+            }
+            
+        }
+
+		    
         
         RuiSetString( file.scoreRui, "messageText", msg);
     }

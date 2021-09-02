@@ -153,7 +153,7 @@ void function VotingPhase()
     //GameRules_SetTeamScore(TEAM_MILITIA, 0)
     
     foreach(player in GetPlayerArray()) 
-    {
+    {  
         if(!IsValid(player)) 
             continue
         _HandleRespawn(player)
@@ -238,7 +238,7 @@ void function StartRound()
         //thread RespawnPlayersInDropshipAtPoint(squad, squad[0].GetOrigin(), squad[0].GetAngles())
     }
 
-    float endTime = Time() + GetCurrentPlaylistVarFloat("round_time", 480)
+    float endTime = Time() + GetCurrentPlaylistVarFloat("round_time", 900)
     while( Time() <= endTime )
 	{
         if(file.tdmState == eTDMState.WINNER_DECIDED)
@@ -311,7 +311,11 @@ void function StartRound()
     printt("winner team : " + winnerTeam);
 
     foreach(player in GetPlayerArray())
-    {
+    {    if( player.IsObserver())
+            {
+                player.StopObserverMode()
+                Remote_CallFunction_NonReplay(player, "ServerCallback_KillReplayHud_Deactivate")
+            }
         if(!IsValid(player)) continue;
         DecideRespawnPlayer(player)
         MakeInvincible(player)

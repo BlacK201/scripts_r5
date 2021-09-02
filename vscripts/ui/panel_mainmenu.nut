@@ -76,12 +76,11 @@ void function InitMainMenuPanel( var panel )
 	//file.autoConnect = GetConVarInt( "ui_lobby_noautostart" ) == 0 // TEMP, need code to add convar which defaults to 1
 
 	#if PC_PROG
-	AddPanelFooterOption( panel, LEFT, BUTTON_B, true, "#B_BUTTON_EXIT_TO_DESKTOP", "#B_BUTTON_EXIT_TO_DESKTOP", null, IsExitToDesktopFooterValid )
+		AddPanelFooterOption( panel, LEFT, BUTTON_B, true, "#B_BUTTON_EXIT_TO_DESKTOP", "#B_BUTTON_EXIT_TO_DESKTOP", null, IsExitToDesktopFooterValid )
 	AddPanelFooterOption( panel, LEFT, KEY_TAB, false, "", "#DATACENTER_DOWNLOADING", OpenDataCenterDialog, IsDataCenterFooterVisible, UpdateDataCenterFooter )
 	#endif // PC_PROG
 	AddPanelFooterOption( panel, LEFT, BUTTON_STICK_RIGHT, false, "#DATACENTER_DOWNLOADING", "", OpenDataCenterDialog, IsDataCenterFooterVisible, UpdateDataCenterFooter )
-	// AddPanelFooterOption( panel, LEFT, BUTTON_START, true, "#START_BUTTON_ACCESSIBLITY", "#BUTTON_ACCESSIBLITY", Accessibility_OnActivate, IsAccessibilityFooterValid )
-	AddPanelFooterOption( panel, LEFT, BUTTON_START, true, "#START_BUTTON_ACCESSIBLITY", "进入死斗", TDM_OnActivate, IsAccessibilityFooterValid )
+	AddPanelFooterOption( panel, LEFT, BUTTON_START, true, "#START_BUTTON_ACCESSIBLITY", "#BUTTON_ACCESSIBLITY", Accessibility_OnActivate, IsAccessibilityFooterValid )
 
 	#if DURANGO_PROG
 		AddPanelFooterOption( panel, LEFT, BUTTON_Y, true, "#Y_BUTTON_SWITCH_PROFILE", "", SwitchProfile_OnActivate, IsSwitchProfileFooterValid )
@@ -814,9 +813,6 @@ void function LaunchButton_OnActivate( var button )
 		return
 
 	printt( "*** LaunchButton_OnActivate ***", string( file.launchButtonActivateFunc ) )
-	ClientCommand("launchplaylist custom_tdm")
-	printt( "--- LaunchButton_OnActivate ---", string( file.launchButtonActivateFunc ) )
-	return
 	thread file.launchButtonActivateFunc()
 }
 
@@ -878,12 +874,6 @@ void function Accessibility_OnActivate( var button )
 	AdvanceMenu( GetMenu( "AccessibilityDialog" ) )
 }
 
-
-void function TDM_OnActivate( var button )
-{
-	printl("launchplaylist survival_dev")
-	ClientCommand("1")
-}
 
 void function OnConfirmDialogResult( int result )
 {

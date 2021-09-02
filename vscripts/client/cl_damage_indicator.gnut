@@ -218,10 +218,10 @@ void function ServerCallback_PlayerTookDamage( float damage, float x, float y, f
 	switch ( damageSourceId )
 	{
 		case eDamageSourceId.deathField: // Circle damage
-			EmitSoundOnEntity( localViewPlayer, "Survival_Circle_ElectricalDamage_1P" )
+			//EmitSoundOnEntity( localViewPlayer, "Survival_Circle_ElectricalDamage_1P" )
 			break
 		case eDamageSourceId.burn:
-			EmitSoundOnEntity( localViewPlayer, "flesh_fire_damage_1p" )
+			//EmitSoundOnEntity( localViewPlayer, "flesh_fire_damage_1p" )
 			break
 	}
 
