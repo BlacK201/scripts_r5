@@ -2,7 +2,8 @@
 
 WeaponData
 {
-
+        //gungame use
+        "melee_damage"									"75"
 	// General
 	"printname"   								"Melee"
 	"shortprintname"							"Melee"

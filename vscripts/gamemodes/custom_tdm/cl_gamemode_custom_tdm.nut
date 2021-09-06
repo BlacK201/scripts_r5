@@ -19,6 +19,7 @@ struct {
     var score2Rui
     var score3Rui
     var victoryRui
+    var latencyRui
 } file;
 
 struct PlayerInfo 
@@ -96,6 +97,7 @@ void function ServerCallback_TDM_DoAnnouncement(float duration, int type)
         case eTDMAnnounce.ROUND_START:
         {
             thread MakeScoreRUI();
+            thread MakeLatencyRUI();
             message = "回合开始！"
             break
         }
@@ -235,6 +237,10 @@ void function ServerCallback_TDM_PlayerKilled()
 {
     if(file.scoreRui)
     {
+        if(!shouldShowLatency)
+		{
+			shouldShowLatency = true
+		}
         
         array<PlayerInfo> playersInfo = []
 

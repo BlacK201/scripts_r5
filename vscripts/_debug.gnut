@@ -1,0 +1,218 @@
+#if R5DEV
+untyped
+
+// Don't forget to add `_debug.gnut` into `scripts.rson` for `SERVER || CLIENT`
+
+global function _Debug_Init
+global function _Debug_PrintStack
+global function _Debug_Breakpoint
+global function _Debug_Run_On_Context_Non_Blocking
+global function _Debug_Run_Script
+
+struct
+{
+	bool breakpoint_enabled = false
+	string ornull command = null
+} file
+
+// I put my init in _mapspawn.gnut
+void function _Debug_Init()
+{
+	#if SERVER && R5DEV
+	AddClientCommandCallback( "d", ClientCommand_script )
+	#endif
+}
+
+void function _Debug_Breakpoint( ... )
+{
+	printl("DBG::Breakpoint")
+	_Debug_PrintStack()
+	
+	file.breakpoint_enabled = true
+	
+	while ( file.breakpoint_enabled ) {
+		WaitFrame()
+		wait 1.0
+		if ( file.command != null ) {
+			string command = expect string( file.command )
+
+			switch( command )
+			{
+				case "c ":
+				case "cnt ":
+					file.breakpoint_enabled = false
+					break
+			}
+
+			local stackInfos = getstackinfos( 2 )
+
+			local funcSrc = "return function ("
+			local params = []
+
+			params.append( stackInfos.locals["this"] )
+			local first = 1
+			foreach ( i, v in stackInfos.locals )
+			{
+				if ( i != "this" && i[0] != '@' ) //foreach iterators start with @
+				{
+					if ( !first )
+					{
+						funcSrc = funcSrc + ", "
+					}
+					first = null
+					params.append( v )
+					funcSrc = funcSrc + i
+				}
+			}
+			funcSrc = funcSrc + "){\n"
+			funcSrc = funcSrc + "return (" + command + ")\n}"
+
+			try
+			{
+				local evalFunc = compilestring( funcSrc, stackInfos.src )
+				evalFunc().acall( params )
+				printl( "Eval breakpoint success" )
+			}
+			catch( error )
+			{
+				printl( "Eval breakpoint error: " + error )
+			}
+
+
+			file.command = null
+		}
+	}
+
+	file.command = null
+}
+
+void function _Debug_Run_On_Context_Non_Blocking( ... )
+{
+	printl("DBG::Non-blocking execution")
+	_Debug_PrintStack()
+	
+	local stackInfos = getstackinfos( 2 )
+	
+	void functionref( string ) executeOnPreviousContext = void function( string command ) : ( stackInfos ) {
+
+		local funcSrc = "return function ("
+		local params = []
+
+		params.append( stackInfos.locals["this"] )
+		local first = 1
+		foreach ( i, v in stackInfos.locals )
+		{
+			if ( i != "this" && i[0] != '@' ) //foreach iterators start with @
+			{
+				if ( !first )
+				{
+					funcSrc = funcSrc + ", "
+				}
+				first = null
+				params.append( v )
+				funcSrc = funcSrc + i
+			}
+		}
+		
+		funcSrc = funcSrc + "){\n"
+		funcSrc = funcSrc + "return (" + command + ")\n}"
+
+		try
+		{
+			local evalFunc = compilestring( funcSrc, stackInfos.src )
+			evalFunc().acall( params )
+			printl( "Eval success" )
+		}
+		catch( error )
+		{
+			printl( "Eval error: " + error )
+		}
+	}
+
+	thread( 
+		void function() : ( executeOnPreviousContext )
+		{
+			bool breakpoint_enabled = true
+			while ( breakpoint_enabled ) {
+				WaitFrame()
+				wait 1.0
+				if ( file.command != null ) {
+					string command = expect string( file.command )
+
+					switch( command )
+					{
+						case "ct ":
+						case "cnt ":
+							breakpoint_enabled = false
+							break
+					}
+
+					executeOnPreviousContext(command)
+
+					file.command = null
+				}
+			}
+		}
+	)()
+	
+	file.command = null
+}
+
+
+void function _Debug_PrintStack()
+{
+	local stack = []
+	int baseStackFrameIndex = 2
+	int level = baseStackFrameIndex
+	local si
+
+	for ( ;; )
+	{
+		si = getstackinfos( level )
+		if ( !si )
+			break
+		stack.append( si )
+		level++
+	}
+
+	foreach(s in stack) {
+		printl("DBG::STACK::" + s.func + "::" + s.src + ":[" + string( s.line ) + "]")
+	}
+}
+
+void function _Debug_Run_Script()
+{
+	// Place to put temporary script for easy access from console `script _Debug_Run_Script()`
+	print("DBG::_Debug_Run_Script")
+	foreach (key, val in getroottable()) {
+		printl(key + " : " + val)
+	}
+	printl("HEHE")
+}
+
+bool function ClientCommand_script( entity player, array<string> args )
+{
+	if( !IsValid( player ) )
+		return true
+
+	if ( !file.breakpoint_enabled )
+		printl("DBG::WANRING You are not on a blocking breakpoint")
+	
+	string func = ""
+
+	for ( int i = 0; i < args.len(); i++ )
+	{
+		func = (func + args[i])
+
+		if(args[i] == "'" || ((i+1) < args.len() && args[i+1] == "'")) {
+			// don't add spaces inside strings
+		} else {
+			func = (func + " ")
+		}
+	}
+	func = StringReplace( func, "'", "\"" )
+	file.command = func
+
+	return true
+}
+#endif

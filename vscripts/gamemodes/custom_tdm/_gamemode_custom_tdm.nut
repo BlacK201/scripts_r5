@@ -88,12 +88,35 @@ void function _OnPropDynamicSpawned(entity prop)
     file.playerSpawnedProps.append(prop)
     
 }
-void function RunTDM()
+
+//latency
+void function GetPlayerLatency()
 {
+   while(true)
+   {
+       foreach(player in GetPlayerArray())
+       {
+           if(!IsValidPlayer(player)) continue
+           player.SetPlayerNetInt("Latency", (player.GetLatency() * 1000).tointeger())
+       }
+       foreach(player in GetPlayerArray())
+       {
+           if(!IsValidPlayer(player)) continue
+           Remote_CallFunction_NonReplay(player, "ServerCallback_UpdateAllPlayerLatency")
+       }
+       
+       wait 0.5
+   }
+}
+
+
+void function RunTDM()
+{   
     WaitForGameState(eGameState.Playing)
     AddSpawnCallback("prop_dynamic", _OnPropDynamicSpawned)
+    thread GetPlayerLatency()
 
-    for(; ; )
+    for(;;)
     {
         VotingPhase();
         StartRound();
